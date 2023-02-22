@@ -19,12 +19,9 @@ class GithubSpider(scrapy.spiders.Spider):
 
     #token列表
     token_list = [
-        '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',
-        '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',
-        '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',
-        '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',
-        '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',
-        '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'
+        "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",
+        "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",
+        "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"
        
     ]
     token_iter = itertools.cycle(token_list) #生成循环迭代器，迭代到最后一个token后，会重新开始迭代
@@ -66,7 +63,9 @@ class GithubSpider(scrapy.spiders.Spider):
             yield self.yield_request() #产生新的请求
             return
 
-        json_data = json.loads(response.body_as_unicode()) #获取json
+        with open("./json.txt","w") as f:
+            f.write(str(response.json()))
+        json_data = json.loads(response.json()) #获取json
         length = len(json_data) #获取json长度
 
         if length == 99:
