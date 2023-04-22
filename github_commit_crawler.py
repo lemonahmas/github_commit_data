@@ -20,7 +20,11 @@ class GithubSpider(scrapy.spiders.Spider):
     
 
     #token列表
-    token_list = []
+    token_list = [
+        "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",
+        "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",
+        "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"       
+    ]
     token_iter = itertools.cycle(token_list) #生成循环迭代器，迭代到最后一个token后，会重新开始迭代
 
 
@@ -36,7 +40,8 @@ class GithubSpider(scrapy.spiders.Spider):
 
     def start_requests(self):
         start_urls = [] #初始爬取链接列表
-        url = "https://api.github.com/repos/golang/go/issues?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #第一条爬取url
+        #url = "https://api.github.com/repos/golang/go/issues?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #第一条爬取url
+        url = "https://api.github.com/repos/golang/go/pulls?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #第一条爬取url
         #添加一个爬取请求
         start_urls.append(scrapy.FormRequest(url, headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
@@ -47,7 +52,8 @@ class GithubSpider(scrapy.spiders.Spider):
         return start_urls
 
     def yield_request(self): #定义一个生成请求函数
-        url = "https://api.github.com/repos/golang/go/issues?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #生成url
+        #url = "https://api.github.com/repos/golang/go/issues?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #生成url
+        url = "https://api.github.com/repos/golang/go/pulls?q=is%3Apr+is%3Aclosed&per_page=99&page="+str(self.num) #第一条爬取url
         #返回请求
         return Request(url,headers={
                 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
@@ -121,20 +127,21 @@ class GithubSpider(scrapy.spiders.Spider):
 
         if length == 99:
             self.num = self.num + 1
-            for issue in json_data:
-                if "pull_request" in issue.keys():
+            for PR in json_data:
+                if "pull_request" in PR.keys():
                     data = {}
-                    data['number'] = issue['number']
-                    data['owner'] = issue['user']['login']
-                    data['title'] = issue['title']
-                    data['created_at'] = issue['created_at']
-                    data['updated_at'] = issue['updated_at']
-                    data["closed_at"] = issue["closed_at"]
-                    data["issue_url"] = issue["url"]
-                    data["diff_url"] = issue["pull_request"]["diff_url"]
-                    if issue["updated_at"] != None:
+                    data['number'] = PR['number']
+                    data['owner'] = PR['user']['login']
+                    data['title'] = PR['title']
+                    data['created_at'] = PR['created_at']
+                    data['updated_at'] = PR['updated_at']
+                    data["closed_at"] = PR["closed_at"]
+                    #data["issue_url"] = issue["url"]
+                    data["issue_url"] = PR["issue_url"]
+                    data["diff_url"] = PR["diff_url"]
+                    if PR["updated_at"] != None:
                         #print(issue["closed_at"])
-                        data["PR_lived"] = (datetime.fromisoformat(issue["updated_at"][:-1]) - datetime.fromisoformat(issue['created_at'][:-1])).total_seconds()
+                        data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
                     data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
                     data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
                     lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
@@ -143,30 +150,31 @@ class GithubSpider(scrapy.spiders.Spider):
                     self.output_file.flush()
                     self.csv_writer.writerow(data.values())
                     self.output_csv.flush()
-                time.sleep(1)
+                time.sleep(0.1)
             yield self.yield_request() #产生新的请求
 
         elif length < 99: #意味着爬取到最后一页
-            for issue in json_data:
-                if "pull_request" in issue.keys():
+            for PR in json_data:
+                if "pull_request" in PR.keys():
                     data = {}
-                    data['number'] = issue['number']
-                    data['owner'] = issue['user']['login']
-                    data['title'] = issue['title']
-                    data['created_at'] = issue['created_at']
-                    data['updated_at'] = issue['updated_at']
-                    data["closed_at"] = issue["closed_at"]
-                    data["issue_url"] = issue["url"]
-                    data["diff_url"] = issue["pull_request"]["diff_url"]
-                    if issue["updated_at"] != None:
+                    data['number'] = PR['number']
+                    data['owner'] = PR['user']['login']
+                    data['title'] = PR['title']
+                    data['created_at'] = PR['created_at']
+                    data['updated_at'] = PR['updated_at']
+                    data["closed_at"] = PR["closed_at"]
+                    #data["issue_url"] = issue["url"]
+                    data["issue_url"] = PR["issue_url"]
+                    data["diff_url"] = PR["diff_url"]
+                    if PR["updated_at"] != None:
                         #print(issue["closed_at"])
-                        data["PR_lived"] = (datetime.fromisoformat(issue["updated_at"][:-1]) - datetime.fromisoformat(issue['created_at'][:-1])).total_seconds()
+                        data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
                     data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
                     data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
                     lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
                     data.update({"lines_changed":lines_changed})
                 yield data
-                time.sleep(1)
+                time.sleep(0.1)
                 self.output_file.write(json.dumps(data)+'\n')
                 self.output_file.flush()
                 self.csv_writer.writerow(data.values())
