@@ -21,7 +21,7 @@ class GithubSpider(scrapy.spiders.Spider):
 
     #token列表
     token_list = [
-               
+        
     ]
     token_iter = itertools.cycle(token_list) #生成循环迭代器，迭代到最后一个token后，会重新开始迭代
 
@@ -126,53 +126,51 @@ class GithubSpider(scrapy.spiders.Spider):
         if length == 99:
             self.num = self.num + 1
             for PR in json_data:
-                if "pull_request" in PR.keys():
-                    data = {}
-                    data['number'] = PR['number']
-                    data['owner'] = PR['user']['login']
-                    data['title'] = PR['title']
-                    data['created_at'] = PR['created_at']
-                    data['updated_at'] = PR['updated_at']
-                    data["closed_at"] = PR["closed_at"]
-                    #data["issue_url"] = issue["url"]
-                    data["issue_url"] = PR["issue_url"]
-                    data["diff_url"] = PR["diff_url"]
-                    if PR["updated_at"] != None:
-                        #print(issue["closed_at"])
-                        data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
-                    data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
-                    data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
-                    lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
-                    data.update({"lines_changed":lines_changed})
-                    self.output_file.write(json.dumps(data)+'\n') #输出每一行，格式也为json                    
-                    self.output_file.flush()
-                    self.csv_writer.writerow(data.values())
-                    self.output_csv.flush()
-                time.sleep(0.1)
+                data = {}
+                data['number'] = PR['number']
+                data['owner'] = PR['user']['login']
+                data['title'] = PR['title']
+                data['created_at'] = PR['created_at']
+                data['updated_at'] = PR['updated_at']
+                data["closed_at"] = PR["closed_at"]
+                #data["issue_url"] = issue["url"]
+                data["issue_url"] = PR["issue_url"]
+                data["diff_url"] = PR["diff_url"]
+                if PR["updated_at"] != None:
+                    #print(issue["closed_at"])
+                    data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
+                data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
+                data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
+                lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
+                data.update({"lines_changed":lines_changed})
+                print("data: "+str(data))
+                self.output_file.write(json.dumps(data)+'\n') #输出每一行，格式也为json                    
+                self.output_file.flush()
+                self.csv_writer.writerow(data.values())
+                self.output_csv.flush()
+                time.sleep(0.2)
             yield self.yield_request() #产生新的请求
 
         elif length < 99: #意味着爬取到最后一页
             for PR in json_data:
-                if "pull_request" in PR.keys():
-                    data = {}
-                    data['number'] = PR['number']
-                    data['owner'] = PR['user']['login']
-                    data['title'] = PR['title']
-                    data['created_at'] = PR['created_at']
-                    data['updated_at'] = PR['updated_at']
-                    data["closed_at"] = PR["closed_at"]
-                    #data["issue_url"] = issue["url"]
-                    data["issue_url"] = PR["issue_url"]
-                    data["diff_url"] = PR["diff_url"]
-                    if PR["updated_at"] != None:
-                        #print(issue["closed_at"])
-                        data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
-                    data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
-                    data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
-                    lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
-                    data.update({"lines_changed":lines_changed})
-                yield data
-                time.sleep(0.1)
+                data = {}
+                data['number'] = PR['number']
+                data['owner'] = PR['user']['login']
+                data['title'] = PR['title']
+                data['created_at'] = PR['created_at']
+                data['updated_at'] = PR['updated_at']
+                data["closed_at"] = PR["closed_at"]
+                #data["issue_url"] = issue["url"]
+                data["issue_url"] = PR["issue_url"]
+                data["diff_url"] = PR["diff_url"]
+                if PR["updated_at"] != None:
+                    #print(issue["closed_at"])
+                    data["PR_lived"] = (datetime.fromisoformat(PR["updated_at"][:-1]) - datetime.fromisoformat(PR['created_at'][:-1])).total_seconds()
+                data.update(self.parse_issue_url(self.request_issue_url(url=data["issue_url"])))
+                data.update(self.parse_events_url(self.request_events_url(url=data["events_url"])))
+                lines_changed = self.parse_diff_url(self.request_diff_url(url=data["diff_url"]))
+                data.update({"lines_changed":lines_changed})
+                #time.sleep(0.2)
                 self.output_file.write(json.dumps(data)+'\n')
                 self.output_file.flush()
                 self.csv_writer.writerow(data.values())
