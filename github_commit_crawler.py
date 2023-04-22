@@ -21,9 +21,7 @@ class GithubSpider(scrapy.spiders.Spider):
 
     #token列表
     token_list = [
-        "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",
-        "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",
-        "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"       
+               
     ]
     token_iter = itertools.cycle(token_list) #生成循环迭代器，迭代到最后一个token后，会重新开始迭代
 
